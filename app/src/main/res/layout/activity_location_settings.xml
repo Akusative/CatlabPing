@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  CatlabPing - 位置查岗设置页布局
+  Copyright (C) 2026 沈菀 (Akusative) - AGPL-3.0
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFF5F5F5"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📍 位置查岗设置"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#FF2D2D2D"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 服务器地址 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="服务器地址"
+            android:textSize="14sp"
+            android:textColor="#FF666666"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/et_location_server"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="http://你的服务器IP:8090"
+            android:inputType="textUri"
+            android:textSize="15sp"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 上报间隔 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="上报间隔（分钟）"
+            android:textSize="14sp"
+            android:textColor="#FF666666"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/et_location_interval"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="10"
+            android:inputType="number"
+            android:textSize="15sp"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 家的纬度 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="家的纬度（lat）"
+            android:textSize="14sp"
+            android:textColor="#FF666666"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/et_home_lat"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="28.xxxxx"
+            android:inputType="numberDecimal|numberSigned"
+            android:textSize="15sp"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 家的经度 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="家的经度（lng）"
+            android:textSize="14sp"
+            android:textColor="#FF666666"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/et_home_lng"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="115.xxxxx"
+            android:inputType="numberDecimal|numberSigned"
+            android:textSize="15sp"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 警报距离 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="离家警报距离（米）"
+            android:textSize="14sp"
+            android:textColor="#FF666666"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/et_alert_distance"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="500"
+            android:inputType="number"
+            android:textSize="15sp"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginBottom="32dp" />
+
+        <!-- 保存按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_location_save"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="💾 保存设置"
+            android:textSize="16sp"
+            android:layout_marginBottom="24dp" />
+
+    </LinearLayout>
+
+</ScrollView>
