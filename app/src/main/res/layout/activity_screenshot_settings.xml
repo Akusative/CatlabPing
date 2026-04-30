@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  CatlabPing - 手机使用监控设置页布局
+  Copyright (C) 2026 沈菀 (Akusative) - AGPL-3.0
+-->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFF5F5F5"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📱 手机使用监控设置"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#FF2D2D2D"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 服务器地址 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="服务器地址"
+            android:textSize="14sp"
+            android:textColor="#FF666666"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/et_screenshot_server"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="http://你的服务器IP"
+            android:inputType="textUri"
+            android:textSize="15sp"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 端口 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="端口"
+            android:textSize="14sp"
+            android:textColor="#FF666666"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/et_screenshot_port"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="2313"
+            android:inputType="number"
+            android:textSize="15sp"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 设备名称 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="设备名称"
+            android:textSize="14sp"
+            android:textColor="#FF666666"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="需与插件配置面板中 Bark 设备列表的设备名称一致"
+            android:textSize="11sp"
+            android:textColor="#FFAAAAAA"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/et_device_name"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="Android"
+            android:inputType="text"
+            android:textSize="15sp"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 监控App列表 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="监控的App列表"
+            android:textSize="14sp"
+            android:textColor="#FF666666"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="每行一个App，格式：显示名称|包名\n留空则监控所有App切换"
+            android:textSize="11sp"
+            android:textColor="#FFAAAAAA"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/et_monitor_apps"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="120dp"
+            android:hint="小红书|com.xingin.xhs\n抖音|com.ss.android.ugc.aweme\nQQ|com.tencent.mobileqq\n微信|com.tencent.mm"
+            android:inputType="textMultiLine"
+            android:textSize="14sp"
+            android:padding="12dp"
+            android:background="@android:drawable/edit_text"
+            android:gravity="top"
+            android:layout_marginBottom="32dp" />
+
+        <!-- 保存按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_screenshot_save"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="💾 保存设置"
+            android:textSize="16sp"
+            android:layout_marginBottom="24dp" />
+
+    </LinearLayout>
+
+</ScrollView>
