@@ -224,34 +224,38 @@ class LocationSettingsActivity : AppCompatActivity() {
             put("temperature", "")
         }
 
-        // POST到服务器
-        val url = "${serverUrl.trimEnd('/')}/api/location/report"
-        val body = json.toString().toRequestBody("application/json".toMediaType())
-        val request = Request.Builder().url(url).post(body).build()
+        // POST到服务器（支持多服务器地址，逗号分隔）
+        val servers = serverUrl.split(",").map { it.trim() }.filter { it.isNotBlank() }
 
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Log.e("LocationSettings", "手动上报失败: ${e.message}")
-                handler.post {
-                    Toast.makeText(this@LocationSettingsActivity, "❌ 上报失败: ${e.message}", Toast.LENGTH_LONG).show()
-                }
-            }
+        for (server in servers) {
+            val url = "${server.trimEnd('/')}/api/location/report"
+            val body = json.toString().toRequestBody("application/json".toMediaType())
+            val request = Request.Builder().url(url).post(body).build()
 
-            override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    val respBody = it.body?.string() ?: ""
-                    Log.i("LocationSettings", "手动上报响应: ${it.code} $respBody")
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.e("LocationSettings", "手动上报失败 ($server): ${e.message}")
                     handler.post {
-                        if (it.isSuccessful) {
-                            Toast.makeText(this@LocationSettingsActivity,
-                                "✅ 上报成功！坐标: ${String.format("%.4f", location.latitude)}, ${String.format("%.4f", location.longitude)}",
-                                Toast.LENGTH_LONG).show()
-                        } else {
-                            Toast.makeText(this@LocationSettingsActivity, "❌ 服务器返回异常: ${it.code}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@LocationSettingsActivity, "❌ 上报失败 ($server): ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    response.use {
+                        val respBody = it.body?.string() ?: ""
+                        Log.i("LocationSettings", "手动上报响应 ($server): ${it.code} $respBody")
+                        handler.post {
+                            if (it.isSuccessful) {
+                                Toast.makeText(this@LocationSettingsActivity,
+                                    "✅ 上报成功！坐标: ${String.format("%.4f", location.latitude)}, ${String.format("%.4f", location.longitude)}",
+                                    Toast.LENGTH_LONG).show()
+                            } else {
+                                Toast.makeText(this@LocationSettingsActivity, "❌ 服务器返回异常 ($server): ${it.code}", Toast.LENGTH_LONG).show()
+                            }
                         }
                     }
                 }
-            }
-        })
+            })
+        }
     }
 }
