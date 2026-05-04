@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  CatlabPing - 监控应用选择页布局
+  Copyright (C) 2026 沈菀 (Akusative) - AGPL-3.0
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFF5F5F5">
+
+    <!-- 顶部标题栏 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:paddingBottom="12dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📱 选择监控的应用"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#FF2D2D2D"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="勾选需要监控的App，未勾选的不会上报也不会截屏"
+            android:textSize="12sp"
+            android:textColor="#FF999999"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 搜索框 -->
+        <EditText
+            android:id="@+id/et_search"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:hint="🔍 搜索应用名称"
+            android:inputType="text"
+            android:textSize="14sp"
+            android:padding="10dp"
+            android:background="@android:drawable/edit_text"
+            android:layout_marginBottom="8dp" />
+
+        <!-- 全选/取消全选 + 已选数量 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tv_selected_count"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="已选择 0 个应用"
+                android:textSize="13sp"
+                android:textColor="#FF666666" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_select_all"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="全选"
+                android:textSize="12sp"
+                style="@style/Widget.MaterialComponents.Button.TextButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_deselect_all"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="取消全选"
+                android:textSize="12sp"
+                style="@style/Widget.MaterialComponents.Button.TextButton" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#FFE0E0E0" />
+
+    <!-- 应用列表 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_apps"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
+        android:clipToPadding="false" />
+
+    <!-- 底部保存按钮 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:background="#FFFFFFFF"
+        android:elevation="8dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_save"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="💾 保存选择"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+</LinearLayout>

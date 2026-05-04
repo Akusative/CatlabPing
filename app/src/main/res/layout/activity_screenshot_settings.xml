@@ -91,7 +91,50 @@
             android:background="@android:drawable/edit_text"
             android:layout_marginBottom="16dp" />
 
-        <!-- 监控App列表 -->
+        <!-- 概率截屏开关 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📸 启用概率截屏"
+                    android:textSize="16sp"
+                    android:textColor="#FF2D2D2D" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="关闭后仅上报App使用记录，不触发自动截屏"
+                    android:textSize="11sp"
+                    android:textColor="#FFAAAAAA" />
+
+            </LinearLayout>
+
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/switch_screenshot_capture"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#FFE0E0E0"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 监控App列表（改为按钮跳转勾选页） -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -103,17 +146,54 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="每行一个App，格式：显示名称|包名\n留空则监控所有App切换"
+            android:text="选择需要监控的App，未选择的不会上报也不会截屏"
+            android:textSize="11sp"
+            android:textColor="#FFAAAAAA"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tv_monitor_apps_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="未设置（监控所有App）"
+            android:textSize="13sp"
+            android:textColor="#FF999999"
+            android:layout_marginBottom="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_select_monitor_apps"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:text="📱 选择监控应用"
+            android:textSize="14sp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 截屏排除名单 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🔒 截屏排除名单"
+            android:textSize="14sp"
+            android:textColor="#FF666666"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="以下App不会被截屏，保护隐私
+格式：显示名称|包名，每行一个"
             android:textSize="11sp"
             android:textColor="#FFAAAAAA"
             android:layout_marginBottom="4dp" />
 
         <EditText
-            android:id="@+id/et_monitor_apps"
+            android:id="@+id/et_screenshot_exclude_apps"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="120dp"
-            android:hint="小红书|com.xingin.xhs\n抖音|com.ss.android.ugc.aweme\nQQ|com.tencent.mobileqq\n微信|com.tencent.mm"
+            android:hint="支付宝|com.eg.android.AlipayGphone
+中国银行|com.chinamworld.main"
             android:inputType="textMultiLine"
             android:textSize="14sp"
             android:padding="12dp"

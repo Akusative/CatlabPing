@@ -24,12 +24,11 @@
             android:padding="20dp">
 
             <!-- 顶部标题 -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
                 android:layout_gravity="center"
-                android:text="🐱"
-                android:textSize="36sp"
+                android:src="@mipmap/ic_launcher"
                 android:layout_marginTop="12dp" />
 
             <TextView
@@ -227,7 +226,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="© 2026 沈菀 (Akusative) | AGPL-3.0 · v1.0.0"
+            android:text="© 2026 沈菀 (Akusative) | AGPL-3.0 · v3.3.1"
             android:textSize="11sp"
             android:textColor="#FFCCCCCC"
             android:gravity="center"
