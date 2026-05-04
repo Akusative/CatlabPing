@@ -15,16 +15,18 @@
 package com.catlab.ping
 
 import android.Manifest
+import android.app.Activity
 import android.app.AppOpsManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.net.Uri
+import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
 import android.provider.Settings
+import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -40,6 +42,10 @@ import com.google.android.material.materialswitch.MaterialSwitch
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        const val TAG = "MainActivity"
+    }
+
     private lateinit var prefs: SharedPreferences
 
     private lateinit var switchLocation: MaterialSwitch
@@ -50,13 +56,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvScreenshotStatus: TextView
     private lateinit var btnScreenshotSettings: MaterialButton
 
+    private var pendingStartMonitor = false
+
     // 权限请求
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
         if (fineGranted) {
-            // 请求后台定位权限
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 requestBackgroundLocation()
             } else {
@@ -75,8 +82,27 @@ class MainActivity : AppCompatActivity() {
             startLocationService()
         } else {
             Toast.makeText(this, "需要后台定位权限才能持续上报位置", Toast.LENGTH_LONG).show()
-            // 即使没有后台权限也可以启动，只是后台可能被杀
             startLocationService()
+        }
+    }
+
+    // MediaProjection 授权请求
+    private val mediaProjectionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            // 仅保存原始授权数据，不创建 MediaProjection 实例
+            ProjectionHolder.save(result.resultCode, result.data)
+            Log.i(TAG, "MediaProjection 授权成功，已保存到 ProjectionHolder")
+            Toast.makeText(this, "📸 截屏授权成功", Toast.LENGTH_SHORT).show()
+        } else {
+            Log.w(TAG, "MediaProjection 授权被拒绝")
+            Toast.makeText(this, "截屏授权被拒绝，监控仍可运行但无法自动截屏", Toast.LENGTH_LONG).show()
+        }
+
+        if (pendingStartMonitor) {
+            pendingStartMonitor = false
+            startAppMonitorService()
         }
     }
 
@@ -84,9 +110,27 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // 初始化全局崩溃捕获器
+        CrashHandler.init(this)
+
+        // 检查上次崩溃日志并弹窗显示
+        val crashLog = CrashHandler.getLastCrashLog(this)
+        if (crashLog != null) {
+            AlertDialog.Builder(this)
+                .setTitle("⚠️ 上次发生了闪退")
+                .setMessage(crashLog)
+                .setPositiveButton("复制并关闭") { dialog, _ ->
+                    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                    clipboard.setPrimaryClip(android.content.ClipData.newPlainText("CatlabPing Crash Log", crashLog))
+                    Toast.makeText(this, "崩溃日志已复制到剪贴板", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                }
+                .setNegativeButton("关闭", null)
+                .show()
+        }
+
         prefs = getSharedPreferences("catlab_ping", MODE_PRIVATE)
 
-        // 绑定视图
         switchLocation = findViewById(R.id.switch_location)
         tvLocationStatus = findViewById(R.id.tv_location_status)
         btnLocationSettings = findViewById(R.id.btn_location_settings)
@@ -95,14 +139,12 @@ class MainActivity : AppCompatActivity() {
         tvScreenshotStatus = findViewById(R.id.tv_screenshot_status)
         btnScreenshotSettings = findViewById(R.id.btn_screenshot_settings)
 
-        // 恢复开关状态
         switchLocation.isChecked = prefs.getBoolean("location_enabled", false)
         switchScreenshot.isChecked = prefs.getBoolean("screenshot_enabled", false)
 
         updateLocationStatus(switchLocation.isChecked)
         updateScreenshotStatus(switchScreenshot.isChecked)
 
-        // 位置查岗开关
         switchLocation.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean("location_enabled", isChecked).apply()
             if (isChecked) {
@@ -119,7 +161,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 手机使用监控开关
         switchScreenshot.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean("screenshot_enabled", isChecked).apply()
             if (isChecked) {
@@ -136,7 +177,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 设置按钮
         btnLocationSettings.setOnClickListener {
             startActivity(Intent(this, LocationSettingsActivity::class.java))
         }
@@ -151,11 +191,23 @@ class MainActivity : AppCompatActivity() {
         updateLocationStatus(switchLocation.isChecked)
         updateScreenshotStatus(switchScreenshot.isChecked)
 
-        // 从使用统计权限设置页返回后，检查是否已授权
         if (switchScreenshot.isChecked && hasUsageStatsPermission()) {
-            startAppMonitorService()
-            updateScreenshotStatus(true)
+            if (!ProjectionHolder.isAuthorized()) {
+                pendingStartMonitor = true
+                requestMediaProjectionPermission()
+            } else {
+                startAppMonitorService()
+            }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
+    private fun requestMediaProjectionPermission() {
+        val projectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        mediaProjectionLauncher.launch(projectionManager.createScreenCaptureIntent())
     }
 
     // ========== 位置权限 ==========
@@ -219,8 +271,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkAndRequestUsageStatsPermission() {
         if (hasUsageStatsPermission()) {
-            startAppMonitorService()
-            updateScreenshotStatus(true)
+            pendingStartMonitor = true
+            requestMediaProjectionPermission()
         } else {
             AlertDialog.Builder(this)
                 .setTitle("需要使用统计权限")

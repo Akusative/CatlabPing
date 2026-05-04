@@ -23,6 +23,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.catlab.ping.R
 import com.google.android.material.button.MaterialButton
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+import java.io.IOException
+import android.util.Log
 
 class LocationSettingsActivity : AppCompatActivity() {
 
@@ -32,6 +38,7 @@ class LocationSettingsActivity : AppCompatActivity() {
     private lateinit var etHomeLng: EditText
     private val handler = Handler(Looper.getMainLooper())
     private var locationReceived = false
+    private val client = OkHttpClient()
 
     // 一次性定位监听器
     private val oneTimeLocationListener = object : LocationListener {
@@ -76,6 +83,12 @@ class LocationSettingsActivity : AppCompatActivity() {
         // 📍 获取当前位置按钮
         btnGetLocation.setOnClickListener {
             getCurrentLocation()
+        }
+
+        // 📤 手动上报按钮
+        val btnManualReport = findViewById<MaterialButton>(R.id.btn_manual_report)
+        btnManualReport.setOnClickListener {
+            manualReport()
         }
 
         btnSave.setOnClickListener {
@@ -154,5 +167,91 @@ class LocationSettingsActivity : AppCompatActivity() {
             locationManager.removeUpdates(oneTimeLocationListener)
         } catch (_: Exception) {}
         super.onDestroy()
+    }
+
+    /**
+     * 手动上报当前位置到服务器
+     * 检查家坐标和服务器地址是否已填写，获取当前GPS坐标后POST上报
+     */
+    private fun manualReport() {
+        val serverUrl = prefs.getString("location_server", "") ?: ""
+        val homeLat = prefs.getString("home_lat", "")
+        val homeLng = prefs.getString("home_lng", "")
+
+        // 检查服务器地址
+        if (serverUrl.isBlank()) {
+            Toast.makeText(this, "❌ 请先填写服务器地址", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // 检查家坐标是否已填写
+        val lat = homeLat?.toDoubleOrNull()
+        val lng = homeLng?.toDoubleOrNull()
+        if (lat == null || lng == null || (lat == 0.0 && lng == 0.0)) {
+            Toast.makeText(this, "❌ 请先设置家的位置（点击「获取当前位置」或手动填写坐标）", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // 检查定位权限
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "请先在主页开启位置查岗以授予定位权限", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        Toast.makeText(this, "📤 正在获取位置并上报...", Toast.LENGTH_SHORT).show()
+
+        // 获取当前位置
+        val lastGps = try { locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) } catch (e: Exception) { null }
+        val lastNet = try { locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) } catch (e: Exception) { null }
+        val location = lastGps ?: lastNet
+
+        if (location == null) {
+            Toast.makeText(this, "❌ 无法获取当前位置，请确认GPS已开启", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        // 构建上报数据
+        val json = JSONObject().apply {
+            put("lat", location.latitude)
+            put("lng", location.longitude)
+            put("accuracy", location.accuracy)
+            put("provider", location.provider ?: "unknown")
+            put("device", "android")
+            put("timestamp", System.currentTimeMillis() / 1000)
+            put("event", "")
+            put("weather", "")
+            put("temperature", "")
+        }
+
+        // POST到服务器
+        val url = "${serverUrl.trimEnd('/')}/api/location/report"
+        val body = json.toString().toRequestBody("application/json".toMediaType())
+        val request = Request.Builder().url(url).post(body).build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("LocationSettings", "手动上报失败: ${e.message}")
+                handler.post {
+                    Toast.makeText(this@LocationSettingsActivity, "❌ 上报失败: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    val respBody = it.body?.string() ?: ""
+                    Log.i("LocationSettings", "手动上报响应: ${it.code} $respBody")
+                    handler.post {
+                        if (it.isSuccessful) {
+                            Toast.makeText(this@LocationSettingsActivity,
+                                "✅ 上报成功！坐标: ${String.format("%.4f", location.latitude)}, ${String.format("%.4f", location.longitude)}",
+                                Toast.LENGTH_LONG).show()
+                        } else {
+                            Toast.makeText(this@LocationSettingsActivity, "❌ 服务器返回异常: ${it.code}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }
+        })
     }
 }

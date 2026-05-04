@@ -86,9 +86,17 @@ class LocationService : Service() {
             startForeground(NOTIFICATION_ID, notification)
         }
 
-        startLocationUpdates()
+        // 延迟2秒启动定位，给系统和GPS Provider初始化时间，避免ColorOS闪退
+        handler.postDelayed({
+            try {
+                startLocationUpdates()
+                Log.i(TAG, "位置更新已延迟启动")
+            } catch (e: Exception) {
+                Log.e(TAG, "延迟启动定位失败: ${e.message}")
+            }
+        }, 2000L)
 
-        Log.i(TAG, "位置服务已启动")
+        Log.i(TAG, "位置服务已启动，等待定位初始化")
         return START_STICKY
     }
 
@@ -176,12 +184,11 @@ class LocationService : Service() {
         val homeLng = prefs.getString("home_lng", "")?.toDoubleOrNull()
         val alertDistance = prefs.getInt("alert_distance", 500)
 
-        // 支持多服务器地址（逗号分隔）
+        // 支持多服务器地址（逗号分隔），服务器地址应已包含端口号
         val servers = serverUrl.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-        val port = prefs.getInt("location_port", 8090)
 
         for (server in servers) {
-            val url = "${server.trimEnd('/')}:${port}/api/location/report"
+            val url = "${server.trimEnd('/')}/api/location/report"
 
             val json = JSONObject().apply {
                 put("lat", location.latitude)

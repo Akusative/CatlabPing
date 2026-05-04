@@ -18,26 +18,29 @@
     <!-- 前台服务权限 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- WakeLock权限（防止CPU休眠导致定位失败） -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- App使用统计权限（监控App切换） -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
 
+    <!-- 查询已安装应用列表 -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
     <!-- 开机自启 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
-    <!-- 截屏相关 -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28"
-        tools:ignore="ScopedStorage" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="CatlabPing"
         android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="CatlabPing"
         android:supportsRtl="true"
         android:theme="@style/Theme.CatlabPing"
         android:usesCleartextTraffic="true">
@@ -58,15 +61,24 @@
         <!-- 手机使用监控设置页 -->
         <activity android:name=".ui.ScreenshotSettingsActivity" />
 
+        <!-- 监控应用选择页 -->
+        <activity android:name=".ui.AppSelectorActivity" />
+
         <!-- 位置上报服务 -->
         <service
             android:name=".service.LocationService"
             android:foregroundServiceType="location"
             android:exported="false" />
 
-        <!-- App监控服务 -->
+        <!-- App监控服务（含截屏功能，需要 dataSync + mediaProjection） -->
         <service
             android:name=".service.AppMonitorService"
+            android:foregroundServiceType="dataSync|mediaProjection"
+            android:exported="false" />
+
+        <!-- 截屏服务（独立，需要mediaProjection授权） -->
+        <service
+            android:name=".service.ScreenCaptureService"
             android:foregroundServiceType="mediaProjection"
             android:exported="false" />
 

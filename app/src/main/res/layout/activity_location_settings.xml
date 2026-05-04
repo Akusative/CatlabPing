@@ -103,6 +103,16 @@
             android:background="@android:drawable/edit_text"
             android:layout_marginBottom="16dp" />
 
+        <!-- 📍 获取当前位置按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_get_current_location"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="📍 获取当前位置作为家的坐标"
+            android:textSize="14sp"
+            android:layout_marginBottom="16dp" />
+
         <!-- 警报距离 -->
         <TextView
             android:layout_width="match_parent"
@@ -121,6 +131,16 @@
             android:textSize="15sp"
             android:padding="12dp"
             android:background="@android:drawable/edit_text"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 📤 手动上报按钮 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_manual_report"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="📤 手动上报当前位置"
+            android:textSize="14sp"
             android:layout_marginBottom="32dp" />
 
         <!-- 保存按钮 -->
