@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.CatlabPing" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">#FF6B9DFF</item>
+        <item name="colorPrimaryContainer">#FFE8F0FF</item>
+        <item name="colorOnPrimaryContainer">#FF1A3A6B</item>
+        <item name="colorSecondary">#FFFF8FA0</item>
+        <item name="colorSecondaryContainer">#FFFFF0F2</item>
+        <item name="android:statusBarColor">#FFF5F5F5</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>
