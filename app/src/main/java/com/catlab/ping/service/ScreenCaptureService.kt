@@ -190,43 +190,62 @@ class ScreenCaptureService : Service() {
             return
         }
 
-        val url = "${serverUrl.trimEnd('/')}:${port}/screenshot/upload"
-        Log.i(TAG, "上传地址: $url")
+        val servers = serverUrl.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+        if (servers.isEmpty()) {
+            Log.w(TAG, "无效的服务器地址，跳过上传")
+            toast("📸 上传跳过: 无效的服务器地址")
+            cleanupCapture()
+            return
+        }
 
-        val body = MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart("device", deviceName)
-            .addFormDataPart(
-                "screenshot", "screenshot_${System.currentTimeMillis()}.jpg",
-                imageBytes.toRequestBody("image/jpeg".toMediaType())
-            )
-            .build()
+        var uploadCount = 0
+        val totalServers = servers.size
 
-        val request = Request.Builder()
-            .url(url)
-            .post(body)
-            .build()
+        for (server in servers) {
+            val url = "${server.trimEnd(':')}:${port}/screenshot/upload"
+            Log.i(TAG, "上传地址: $url")
 
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Log.e(TAG, "截屏上传失败: ${e.message}")
-                toast("📸 上传失败: ${e.message}")
-                cleanupCapture()
-            }
+            val body = MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("device", deviceName)
+                .addFormDataPart(
+                    "screenshot", "screenshot_${System.currentTimeMillis()}.jpg",
+                    imageBytes.toRequestBody("image/jpeg".toMediaType())
+                )
+                .build()
 
-            override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    if (it.isSuccessful) {
-                        Log.i(TAG, "截屏上传成功！")
-                        toast("📸 上传成功！")
-                    } else {
-                        Log.w(TAG, "截屏上传返回异常: ${it.code}")
-                        toast("📸 上传异常: HTTP ${it.code}")
+            val request = Request.Builder()
+                .url(url)
+                .post(body)
+                .build()
+
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.e(TAG, "截屏上传失败 ($server): ${e.message}")
+                    toast("📸 上传失败 ($server): ${e.message}")
+                    synchronized(this@ScreenCaptureService) {
+                        uploadCount++
+                        if (uploadCount >= totalServers) cleanupCapture()
                     }
                 }
-                cleanupCapture()
-            }
-        })
+
+                override fun onResponse(call: Call, response: Response) {
+                    response.use {
+                        if (it.isSuccessful) {
+                            Log.i(TAG, "截屏上传成功！($server)")
+                            toast("📸 上传成功！($server)")
+                        } else {
+                            Log.w(TAG, "截屏上传返回异常 ($server): ${it.code}")
+                            toast("📸 上传异常 ($server): HTTP ${it.code}")
+                        }
+                    }
+                    synchronized(this@ScreenCaptureService) {
+                        uploadCount++
+                        if (uploadCount >= totalServers) cleanupCapture()
+                    }
+                }
+            })
+        }
     }
 
     /**

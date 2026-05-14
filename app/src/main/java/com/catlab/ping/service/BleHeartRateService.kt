@@ -280,47 +280,58 @@ class BleHeartRateService : Service() {
         lastUploadTime = now
 
         val heartrateServer = prefs.getString("heartrate_server", "") ?: ""
-        var targetUrl = "http://192.168.x.x:3476/api/push?bpm=$bpm" // 默认回退URL
+        val targetUrls = mutableListOf<String>()
 
         if (heartrateServer.isNotBlank()) {
-            val base = heartrateServer.trimEnd('/')
-            targetUrl = if (base.startsWith("http")) {
-                "$base/api/push?bpm=$bpm"
-            } else {
-                "http://$base/api/push?bpm=$bpm"
+            val servers = heartrateServer.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            for (s in servers) {
+                val base = s.trimEnd('/')
+                val url = if (base.startsWith("http")) {
+                    "$base/api/push?bpm=$bpm"
+                } else {
+                    "http://$base/api/push?bpm=$bpm"
+                }
+                targetUrls.add(url)
             }
         } else {
             // 后备位置服务器
             val locationServer = prefs.getString("location_server", "") ?: ""
             if (locationServer.isNotBlank()) {
-                try {
-                    val firstServer = locationServer.split(",")[0].trim()
-                    val uri = URI(firstServer)
-                    if (uri.host != null) {
-                        targetUrl = "http://${uri.host}:3476/api/push?bpm=$bpm"
+                val servers = locationServer.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                for (s in servers) {
+                    try {
+                        val uri = URI(s)
+                        if (uri.host != null) {
+                            targetUrls.add("http://${uri.host}:3476/api/push?bpm=$bpm")
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "解析位置服务器失败: $s", e)
                     }
-                } catch (e: Exception) {
-                    Log.e(TAG, "解析位置服务器失败", e)
                 }
             }
         }
 
-        val request = Request.Builder().url(targetUrl).get().build()
+        if (targetUrls.isEmpty()) {
+            targetUrls.add("http://192.168.x.x:3476/api/push?bpm=$bpm")
+        }
 
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Log.e(TAG, "BLE 心率上报失败: ${e.message}")
-            }
-            override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    if (it.isSuccessful) {
-                        Log.d(TAG, "BLE 心率上报成功: $bpm BPM")
-                    } else {
-                        Log.e(TAG, "BLE 心率上报异常，HTTP状态码: ${it.code}")
+        for (targetUrl in targetUrls) {
+            val request = Request.Builder().url(targetUrl).get().build()
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.e(TAG, "BLE 心率上报失败 ($targetUrl): ${e.message}")
+                }
+                override fun onResponse(call: Call, response: Response) {
+                    response.use {
+                        if (it.isSuccessful) {
+                            Log.d(TAG, "BLE 心率上报成功 ($targetUrl): $bpm BPM")
+                        } else {
+                            Log.e(TAG, "BLE 心率上报异常 ($targetUrl)，HTTP状态码: ${it.code}")
+                        }
                     }
                 }
-            }
-        })
+            })
+        }
     }
 
     private fun createNotificationChannel() {

@@ -66,50 +66,60 @@ class HeartRateReceiver : BroadcastReceiver() {
 
         // 获取心率服务器地址
         val heartrateServer = prefs.getString("heartrate_server", "") ?: ""
-        
-        var targetUrl = "http://192.168.x.x:3476/api/push?bpm=$bpm" // 默认回退URL
-        
+        val targetUrls = mutableListOf<String>()
+
         if (heartrateServer.isNotBlank()) {
-            val base = heartrateServer.trimEnd('/')
-            targetUrl = if (base.startsWith("http")) {
-                "$base/api/push?bpm=$bpm"
-            } else {
-                "http://$base/api/push?bpm=$bpm"
+            val servers = heartrateServer.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            for (s in servers) {
+                val base = s.trimEnd('/')
+                val url = if (base.startsWith("http")) {
+                    "$base/api/push?bpm=$bpm"
+                } else {
+                    "http://$base/api/push?bpm=$bpm"
+                }
+                targetUrls.add(url)
             }
         } else {
             // 如果未单独配置心率服务端，尝试从位置查岗服务器中提取域名/IP作为后备方案
             val locationServer = prefs.getString("location_server", "") ?: ""
             if (locationServer.isNotBlank()) {
-                try {
-                    val firstServer = locationServer.split(",")[0].trim()
-                    val uri = URI(firstServer)
-                    if (uri.host != null) {
-                        targetUrl = "http://${uri.host}:3476/api/push?bpm=$bpm"
+                val servers = locationServer.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                for (s in servers) {
+                    try {
+                        val uri = URI(s)
+                        if (uri.host != null) {
+                            targetUrls.add("http://${uri.host}:3476/api/push?bpm=$bpm")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("HeartRateReceiver", "回退解析位置服务器地址失败: $s", e)
                     }
-                } catch (e: Exception) {
-                    Log.e("HeartRateReceiver", "回退解析位置服务器地址失败", e)
                 }
             }
         }
 
-        Log.d("HeartRateReceiver", "请求地址: $targetUrl")
+        if (targetUrls.isEmpty()) {
+            targetUrls.add("http://192.168.x.x:3476/api/push?bpm=$bpm")
+        }
 
-        val request = Request.Builder().url(targetUrl).get().build()
+        for (targetUrl in targetUrls) {
+            Log.d("HeartRateReceiver", "请求地址: $targetUrl")
+            val request = Request.Builder().url(targetUrl).get().build()
 
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Log.e("HeartRateReceiver", "心率上报失败: ${e.message}")
-            }
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.e("HeartRateReceiver", "心率上报失败 ($targetUrl): ${e.message}")
+                }
 
-            override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    if (it.isSuccessful) {
-                        Log.i("HeartRateReceiver", "心率上报成功: $bpm BPM")
-                    } else {
-                        Log.e("HeartRateReceiver", "心率上报异常，HTTP状态码: ${it.code}")
+                override fun onResponse(call: Call, response: Response) {
+                    response.use {
+                        if (it.isSuccessful) {
+                            Log.i("HeartRateReceiver", "心率上报成功 ($targetUrl): $bpm BPM")
+                        } else {
+                            Log.e("HeartRateReceiver", "心率上报异常 ($targetUrl)，HTTP状态码: ${it.code}")
+                        }
                     }
                 }
-            }
-        })
+            })
+        }
     }
 }
